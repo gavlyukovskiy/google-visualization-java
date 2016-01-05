@@ -1,3 +1,8 @@
+Version 1.1.2-cloudyn-fork
+-----------------------------------------
+- Added abillity to extend DataSourceHelper and ResponseWriter, by default behavior
+  won't be change. Updated all examples and tests.
+
 Version 1.1.2
 -----------------------------------------
 - Fix security threat of swf injection in jsonp.

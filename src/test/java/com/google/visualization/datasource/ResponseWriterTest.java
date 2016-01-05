@@ -14,6 +14,10 @@
 
 package com.google.visualization.datasource;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
+
 import com.google.common.collect.Lists;
 import com.google.visualization.datasource.base.DataSourceException;
 import com.google.visualization.datasource.base.DataSourceParameters;
@@ -28,20 +32,13 @@ import com.google.visualization.datasource.datatable.value.NumberValue;
 import com.google.visualization.datasource.datatable.value.TextValue;
 import com.google.visualization.datasource.datatable.value.ValueType;
 import com.google.visualization.datasource.render.JsonRenderer;
-
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 import junit.framework.TestCase;
 
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-
 
 /**
  * Unit test for ResponseWriter.
@@ -49,6 +46,8 @@ import static org.easymock.EasyMock.verify;
  * @author Nimrod T.
  */
 public class ResponseWriterTest extends TestCase {
+
+  private ResponseWriter responseWriter = ResponseWriter.getInstance();
 
   private DataTable getTestDataTable() throws DataSourceException {
     DataTable dataTable = new DataTable();
@@ -174,8 +173,8 @@ public class ResponseWriterTest extends TestCase {
     mockHttpServletResponse.setHeader(eq(csvheaderName), eq(csvheaderValue));
     expectLastCall();
     
-    replay(mockHttpServletResponse);   
-    ResponseWriter.setServletResponseCSV(dsParamsCSV, mockHttpServletResponse);
+    replay(mockHttpServletResponse);
+    responseWriter.setServletResponseCSV(dsParamsCSV, mockHttpServletResponse);
     verify(mockHttpServletResponse);
   }
   
@@ -192,8 +191,8 @@ public class ResponseWriterTest extends TestCase {
     mockHttpServletResponse.setHeader(eq(headerName), eq(headerValue));
     expectLastCall();
     
-    replay(mockHttpServletResponse);   
-    ResponseWriter.setServletResponseTSVExcel(dsParamsTsvExcel, mockHttpServletResponse);
+    replay(mockHttpServletResponse);
+    responseWriter.setServletResponseTSVExcel(dsParamsTsvExcel, mockHttpServletResponse);
     verify(mockHttpServletResponse);
   }
   
@@ -203,8 +202,8 @@ public class ResponseWriterTest extends TestCase {
     mockHttpServletResponse.setContentType(eq(HtmlContentType));
     expectLastCall();
     
-    replay(mockHttpServletResponse);   
-    ResponseWriter.setServletResponseHTML(mockHttpServletResponse);
+    replay(mockHttpServletResponse);
+    responseWriter.setServletResponseHTML(mockHttpServletResponse);
     verify(mockHttpServletResponse);
   }
   
@@ -214,8 +213,8 @@ public class ResponseWriterTest extends TestCase {
     mockHttpServletResponse.setContentType(eq(jsonContentType));
     expectLastCall();
     
-    replay(mockHttpServletResponse);   
-    ResponseWriter.setServletResponseJSON(mockHttpServletResponse);
+    replay(mockHttpServletResponse);
+    responseWriter.setServletResponseJSON(mockHttpServletResponse);
     verify(mockHttpServletResponse);
   }
   
@@ -225,8 +224,8 @@ public class ResponseWriterTest extends TestCase {
     mockHttpServletResponse.setContentType(eq(jsonpContentType));
     expectLastCall();
     
-    replay(mockHttpServletResponse);   
-    ResponseWriter.setServletResponseJSONP(mockHttpServletResponse);
+    replay(mockHttpServletResponse);
+    responseWriter.setServletResponseJSONP(mockHttpServletResponse);
     verify(mockHttpServletResponse);
   }
 }

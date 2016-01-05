@@ -68,6 +68,8 @@ public class AdvancedExampleServlet2 extends HttpServlet {
    * The log used throughout the data source library.
    */
   private static final Log log = LogFactory.getLog(AdvancedExampleServlet2.class.getName());
+
+  private DataSourceHelper dataSourceHelper = DataSourceHelper.getInstance();
   
   /**
    * A Map of animal names to link in wikipedia describing them.
@@ -155,16 +157,16 @@ public class AdvancedExampleServlet2 extends HttpServlet {
       // DataSourceHelper.verifyAccessApproved(dsRequest);
 
       // Split the query.
-      QueryPair query = DataSourceHelper.splitQuery(dsRequest.getQuery(), Capabilities.SELECT);
+      QueryPair query = dataSourceHelper.splitQuery(dsRequest.getQuery(), Capabilities.SELECT);
 
       // Generate the data table.
       DataTable data = generateMyDataTable(query.getDataSourceQuery(), req);
 
       // Apply the completion query to the data table.
-      DataTable newData = DataSourceHelper.applyQuery(query.getCompletionQuery(), data,
+      DataTable newData = dataSourceHelper.applyQuery(query.getCompletionQuery(), data,
           dsRequest.getUserLocale());
 
-      DataSourceHelper.setServletResponse(newData, dsRequest, resp);
+      dataSourceHelper.setServletResponse(newData, dsRequest, resp);
     } catch (RuntimeException rte) {
       log.error("A runtime exception has occured", rte);
       ResponseStatus status = new ResponseStatus(StatusType.ERROR, ReasonType.INTERNAL_ERROR,
@@ -172,12 +174,12 @@ public class AdvancedExampleServlet2 extends HttpServlet {
       if (dsRequest == null) {
         dsRequest = DataSourceRequest.getDefaultDataSourceRequest(req);
       }
-      DataSourceHelper.setServletErrorResponse(status, dsRequest, resp);
+      dataSourceHelper.setServletErrorResponse(status, dsRequest, resp);
     } catch (DataSourceException e) {
       if (dsRequest != null) {
-        DataSourceHelper.setServletErrorResponse(e, dsRequest, resp);
+        dataSourceHelper.setServletErrorResponse(e, dsRequest, resp);
       } else {
-        DataSourceHelper.setServletErrorResponse(e, req, resp);
+        dataSourceHelper.setServletErrorResponse(e, req, resp);
       }
     }
   }

@@ -160,7 +160,7 @@ public class DataSourceRequest {
    */
   private void createQueryFromRequest(HttpServletRequest req) throws InvalidQueryException {
     String queryString = req.getParameter(QUERY_REQUEST_PARAMETER);
-    query = DataSourceHelper.parseQuery(queryString);
+    query = DataSourceHelper.getInstance().parseQuery(queryString);
   }
 
   /**
@@ -191,7 +191,7 @@ public class DataSourceRequest {
    * @param req The http servlet request.
    */
   private void inferLocaleFromRequest(HttpServletRequest req) {
-    userLocale = DataSourceHelper.getLocaleFromRequest(req);
+    userLocale = DataSourceHelper.getInstance().getLocaleFromRequest(req);
   }
 
   /**

@@ -51,6 +51,8 @@ public class SimpleExampleServlet2 extends HttpServlet {
    * The log used throughout the data source library.
    */
   private static final Log log = LogFactory.getLog(SimpleExampleServlet2.class.getName());
+
+  private DataSourceHelper dataSourceHelper = DataSourceHelper.getInstance();
   
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -68,11 +70,11 @@ public class SimpleExampleServlet2 extends HttpServlet {
       // DataSourceHelper.verifyAccessApproved(dsRequest);
 
       // Apply the query to the data table.
-      DataTable newData = DataSourceHelper.applyQuery(dsRequest.getQuery(), data,
+      DataTable newData = dataSourceHelper.applyQuery(dsRequest.getQuery(), data,
           dsRequest.getUserLocale());
 
       // Set the response.
-      DataSourceHelper.setServletResponse(newData, dsRequest, resp);
+      dataSourceHelper.setServletResponse(newData, dsRequest, resp);
     } catch (RuntimeException rte) {
       log.error("A runtime exception has occured", rte);
       ResponseStatus status = new ResponseStatus(StatusType.ERROR, ReasonType.INTERNAL_ERROR,
@@ -80,12 +82,12 @@ public class SimpleExampleServlet2 extends HttpServlet {
       if (dsRequest == null) {
         dsRequest = DataSourceRequest.getDefaultDataSourceRequest(req);
       }
-      DataSourceHelper.setServletErrorResponse(status, dsRequest, resp);
+      dataSourceHelper.setServletErrorResponse(status, dsRequest, resp);
     } catch (DataSourceException e) {
       if (dsRequest != null) {
-        DataSourceHelper.setServletErrorResponse(e, dsRequest, resp);
+        dataSourceHelper.setServletErrorResponse(e, dsRequest, resp);
       } else {
-        DataSourceHelper.setServletErrorResponse(e, req, resp);
+        dataSourceHelper.setServletErrorResponse(e, req, resp);
       }
     }
   }

@@ -986,6 +986,14 @@ public class MockResultSet implements ResultSet {
     throw new UnsupportedOperationException("This operation is unsupported.");
   }
 
+  public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+    throw new UnsupportedOperationException("This operation is unsupported.");
+  }
+
+  public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+    throw new UnsupportedOperationException("This operation is unsupported.");
+  }
+
   public <T> T unwrap(Class<T> iface) {
     throw new UnsupportedOperationException("This operation is unsupported.");
   }

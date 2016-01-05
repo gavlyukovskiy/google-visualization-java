@@ -56,6 +56,8 @@ public class CsvDataSourceServlet extends DataSourceServlet {
    */
   private static final String URL_PARAM_NAME = "url";
 
+  private DataSourceHelper dataSourceHelper = DataSourceHelper.getInstance();
+
   /**
    * Generates the data table.
    * This servlet assumes a special parameter that contains the CSV URL from which to load
@@ -81,7 +83,7 @@ public class CsvDataSourceServlet extends DataSourceServlet {
       throw new DataSourceException(ReasonType.INVALID_REQUEST, "Couldn't read from url: " + url);
     }
     DataTable dataTable = null;
-    ULocale requestLocale = DataSourceHelper.getLocaleFromRequest(request);
+    ULocale requestLocale = dataSourceHelper.getLocaleFromRequest(request);
     try {
       // Note: We assume that all the columns in the CSV file are text columns. In cases where the
       // column types are known in advance, this behavior can be overridden by passing a list of

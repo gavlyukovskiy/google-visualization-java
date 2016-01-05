@@ -16,6 +16,7 @@ package com.google.visualization.datasource.query;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.visualization.datasource.DataSourceHelper;
 import com.google.visualization.datasource.base.InvalidQueryException;
 import com.google.visualization.datasource.base.MessagesEnum;
 
@@ -38,9 +39,9 @@ import java.util.Set;
  * query language reference
  * </a>.
  * A Query can be executed by the query engine
- * (see: {@link com.google.visualization.datasource.DataSourceHelper#applyQuery}).
+ * (see: {@link DataSourceHelper#applyQuery}).
  * It can be split in 2 Query objects based on the Capabilities value
- * (see: {@link com.google.visualization.datasource.DataSourceHelper#splitQuery}).
+ * (see: {@link DataSourceHelper#splitQuery}).
  *
  * Note on errors: Since this class handles a user generated query, all errors
  * (of type INVALID_QUERY) should provide a descriptive error message for both
@@ -569,7 +570,7 @@ public class Query {
   
   /**
    * Sets the user locale for creating localized messages.
-   * @param userLocale the user locale.
+   * @param localeForUserMessges the user locale.
    */
   public void setLocaleForUserMessages(ULocale localeForUserMessges) {
     this.localeForUserMessages = localeForUserMessges;

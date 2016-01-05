@@ -14,6 +14,11 @@
 
 package com.google.visualization.datasource;
 
+import java.util.ArrayList;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
 import com.google.visualization.datasource.base.DataSourceException;
 import com.google.visualization.datasource.base.DataSourceParameters;
 import com.google.visualization.datasource.base.InvalidQueryException;
@@ -26,18 +31,15 @@ import com.google.visualization.datasource.datatable.value.NumberValue;
 import com.google.visualization.datasource.datatable.value.TextValue;
 import com.google.visualization.datasource.datatable.value.ValueType;
 import com.google.visualization.datasource.query.Query;
-
 import com.ibm.icu.util.ULocale;
-
 import junit.framework.TestCase;
 
-import static org.easymock.EasyMock.*;
-
-import java.util.ArrayList;
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.createNiceMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 
 /**
  * Unit test for Helper.
@@ -45,6 +47,8 @@ import javax.servlet.http.HttpServletRequest;
  * @author Yaniv S.
  */
 public class DataSourceHelperTest extends TestCase {
+
+  private DataSourceHelper dataSourceHelper = DataSourceHelper.getInstance();
 
   private DataTable createData() throws TypeMismatchException {
     DataTable data = new DataTable();
@@ -74,7 +78,7 @@ public class DataSourceHelperTest extends TestCase {
     DataTable data = createData();
 
     // Test select.
-    DataTable result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery("select population"),
+    DataTable result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery("select population"),
         data, ULocale.US);
     assertEquals(1, result.getNumberOfColumns());
     assertEquals(4, result.getNumberOfRows());
@@ -83,7 +87,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test where.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery(
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery(
         "select name,vegeterian where population > 100"), data, ULocale.US);
     assertEquals(2, result.getNumberOfColumns());
     assertEquals(1, result.getNumberOfRows());
@@ -93,7 +97,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test group by.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery(
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery(
         "select vegeterian,sum(population) group by vegeterian"), data, ULocale.US);
     assertEquals(2, result.getNumberOfColumns());
     assertEquals(2, result.getNumberOfRows());
@@ -103,7 +107,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test pivot.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery(
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery(
         "select sum(population) pivot vegeterian"), data, ULocale.US);
     assertEquals(2, result.getNumberOfColumns());
     assertEquals(1, result.getNumberOfRows());
@@ -113,7 +117,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test order by.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery(
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery(
         "select name order by population"), data, ULocale.US);
     assertEquals(1, result.getNumberOfColumns());
     assertEquals(4, result.getNumberOfRows());
@@ -125,7 +129,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test limit and offset.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery("limit 1 offset 1"), data,
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery("limit 1 offset 1"), data,
         ULocale.US);
     assertEquals(4, result.getNumberOfColumns());
     assertEquals(1, result.getNumberOfRows());
@@ -134,7 +138,7 @@ public class DataSourceHelperTest extends TestCase {
     data = createData();
 
     // Test label and format.
-    result = DataSourceHelper.applyQuery(DataSourceHelper.parseQuery(
+    result = dataSourceHelper.applyQuery(dataSourceHelper.parseQuery(
         "label population 'Population size (thousands)' format population \"'$'#'k'\""), data,
         ULocale.US);
     assertEquals(4, result.getNumberOfColumns());
@@ -146,16 +150,16 @@ public class DataSourceHelperTest extends TestCase {
 
     // Test that validation can fail
     try {
-      DataSourceHelper.parseQuery("select min(min(a))");
+      dataSourceHelper.parseQuery("select min(min(a))");
       fail();
     } catch (InvalidQueryException e) {
       // Do nothing.
     }
 
     // Test that validation against the table description can fail.
-    Query q = DataSourceHelper.parseQuery("select avg(name) group by link");
+    Query q = dataSourceHelper.parseQuery("select avg(name) group by link");
     try {
-      DataSourceHelper.applyQuery(q, data, ULocale.US);
+      dataSourceHelper.applyQuery(q, data, ULocale.US);
       fail();
     } catch (InvalidQueryException e) {
       // Do nothing.
@@ -190,7 +194,7 @@ public class DataSourceHelperTest extends TestCase {
         + "{\"id\":\"col2\",\"label\":\"column2\",\"type\":\"boolean\",\"pattern\":\"\"},"
         + "{\"id\":\"col3\",\"label\":\"column3\",\"type\":\"string\",\"pattern\":\"\"}],"
         + "\"rows\":[{\"c\":[{\"v\":7.0},{\"v\":false},{\"v\":\"Why?\"}]}]}}",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
 
     // With reqId:666;
     dataSourceRequest = new DataSourceRequest(
@@ -204,7 +208,7 @@ public class DataSourceHelperTest extends TestCase {
         + "{\"id\":\"col2\",\"label\":\"column2\",\"type\":\"boolean\",\"pattern\":\"\"},"
         + "{\"id\":\"col3\",\"label\":\"column3\",\"type\":\"string\",\"pattern\":\"\"}],"
         + "\"rows\":[{\"c\":[{\"v\":7.0},{\"v\":false},{\"v\":\"Why?\"}]}]}}",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
 
     // With out:json;
     dataSourceRequest = new DataSourceRequest(
@@ -218,7 +222,7 @@ public class DataSourceHelperTest extends TestCase {
         + "{\"id\":\"col2\",\"label\":\"column2\",\"type\":\"boolean\",\"pattern\":\"\"},"
         + "{\"id\":\"col3\",\"label\":\"column3\",\"type\":\"string\",\"pattern\":\"\"}],"
         + "\"rows\":[{\"c\":[{\"v\":7.0},{\"v\":false},{\"v\":\"Why?\"}]}]}}",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
 
     // With out:jsonp;
     dataSourceRequest = new DataSourceRequest(
@@ -233,7 +237,7 @@ public class DataSourceHelperTest extends TestCase {
         + "{\"id\":\"col2\",\"label\":\"column2\",\"type\":\"boolean\",\"pattern\":\"\"},"
         + "{\"id\":\"col3\",\"label\":\"column3\",\"type\":\"string\",\"pattern\":\"\"}],"
         + "\"rows\":[{\"c\":[{\"v\":7.0},{\"v\":false},{\"v\":\"Why?\"}]}]}});",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
 
     // Now with out:csv;
     dataSourceRequest = new DataSourceRequest(
@@ -242,7 +246,7 @@ public class DataSourceHelperTest extends TestCase {
         ULocale.UK);
     assertEquals(
         "\"column1\"\t\"column2\"\t\"column3\"\n7\tfalse\t\"Why?\"\n",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
 
     // Now with out:tsv-excel;
     dataSourceRequest = new DataSourceRequest(
@@ -251,57 +255,57 @@ public class DataSourceHelperTest extends TestCase {
         ULocale.UK);
     assertEquals(
         "\"column1\",\"column2\",\"column3\"\n7,false,\"Why?\"\n",
-        DataSourceHelper.generateResponse(dataTable, dataSourceRequest));
+        dataSourceHelper.generateResponse(dataTable, dataSourceRequest));
   }
 
 
   public void testGetLocaleFromReuqest() {
     HttpServletRequest req = createMock(HttpServletRequest.class);
-    expect(req.getParameter(DataSourceHelper.LOCALE_REQUEST_PARAMETER)).andReturn("fr");
-    expect(req.getParameter(DataSourceHelper.LOCALE_REQUEST_PARAMETER)).andReturn(null);
+    expect(req.getParameter(dataSourceHelper.LOCALE_REQUEST_PARAMETER)).andReturn("fr");
+    expect(req.getParameter(dataSourceHelper.LOCALE_REQUEST_PARAMETER)).andReturn(null);
     expect(req.getLocale()).andReturn(Locale.CANADA_FRENCH);
     replay(req);
 
-    assertEquals(Locale.FRENCH, DataSourceHelper.getLocaleFromRequest(req).toLocale());
-    assertEquals(ULocale.CANADA_FRENCH, DataSourceHelper.getLocaleFromRequest(req));
+    assertEquals(Locale.FRENCH, dataSourceHelper.getLocaleFromRequest(req).toLocale());
+    assertEquals(ULocale.CANADA_FRENCH, dataSourceHelper.getLocaleFromRequest(req));
 
     verify(req);
   }
-  
+
   public void testVerifyAccessApprovedTest() throws DataSourceException {
     HttpServletRequest req = createNiceMock(HttpServletRequest.class);
 
     // Verify that json from same domain is approved.
     setupHttpRequestMock(req, true, "out:json");
-    DataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
+    dataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
     verify(req);
-    
+
     // Verify that json from cross domain is denied.
     setupHttpRequestMock(req, false, "out:json");
     try {
-      DataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
+      dataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
       fail();
     } catch (DataSourceException e) {
       // This is the expected behavior.
     }
     verify(req);
-    
+
     // Verify that csv from cross domain is approved.
     setupHttpRequestMock(req, false, "out:csv");
-    DataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
+    dataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
     verify(req);
-    
+
     // Verify that html from cross domain is approved.
     setupHttpRequestMock(req, false, "out:html");
-    DataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
+    dataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
     verify(req);
 
     // Verify that tsv-excel from cross domain is approved.
     setupHttpRequestMock(req, false, "out:tsv-excel");
-    DataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
+    dataSourceHelper.verifyAccessApproved(new DataSourceRequest(req));
     verify(req);
   }
-  
+
   public void testParseQueryErrors() {
     DataTable dataTable = new DataTable();
     dataTable.addColumn(new ColumnDescription("A", ValueType.TEXT, "column1"));
@@ -355,16 +359,16 @@ public class DataSourceHelperTest extends TestCase {
     checkQueryError("select avg(C),avg(C)", dataTable,
         "Column [avg(C)] cannot appear more than once in SELECT.");
   }
-  
+
   private void checkQueryError(String query, DataTable dataTable, String expectedMessage) {
     checkQueryError(query, dataTable, expectedMessage, false);
   }
-  
+
   private void checkQueryError(String query, DataTable dataTable, String expectedMessage,
       boolean startsWith) {
     try {
-      DataSourceHelper.applyQuery(
-          DataSourceHelper.parseQuery(query), dataTable, null);
+      dataSourceHelper.applyQuery(
+          dataSourceHelper.parseQuery(query), dataTable, null);
       fail("Exception should be thrown for query " + query);
     } catch (DataSourceException dse) {
       if (startsWith) {

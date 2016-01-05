@@ -14,6 +14,16 @@
 
 package com.google.visualization.datasource;
 
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.visualization.datasource.base.DataSourceException;
 import com.google.visualization.datasource.base.DataSourceParameters;
 import com.google.visualization.datasource.base.InvalidQueryException;
@@ -32,18 +42,7 @@ import com.google.visualization.datasource.query.parser.QueryBuilder;
 import com.google.visualization.datasource.render.CsvRenderer;
 import com.google.visualization.datasource.render.HtmlRenderer;
 import com.google.visualization.datasource.render.JsonRenderer;
-
 import com.ibm.icu.util.ULocale;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * A Helper class providing convenience functions for serving data source requests.
@@ -65,12 +64,23 @@ public class DataSourceHelper {
   /**
    * The name of the http request parameter that indicates the requested locale.
    */
-  /* package */ static final String LOCALE_REQUEST_PARAMETER = "hl";
+  protected static final String LOCALE_REQUEST_PARAMETER = "hl";
 
-  /**
-   * A private constructor for this Singleton.
-   */
-  private DataSourceHelper() {}
+  private static final DataSourceHelper SINGLETON = new DataSourceHelper();
+
+  private ResponseWriter responseWriter;
+
+  public static DataSourceHelper getInstance() {
+    return SINGLETON;
+  }
+
+  protected DataSourceHelper() {
+    this(ResponseWriter.getInstance());
+  }
+
+  public DataSourceHelper(ResponseWriter responseWriter) {
+    this.responseWriter = responseWriter;
+  }
 
   /**
    * Executes the default data source servlet flow.
@@ -84,7 +94,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case of I/O errors.
    */
-  public static void executeDataSourceServletFlow(HttpServletRequest req, HttpServletResponse resp,
+  public void executeDataSourceServletFlow(HttpServletRequest req, HttpServletResponse resp,
       DataTableGenerator dtGenerator) throws IOException {
     executeDataSourceServletFlow(req, resp, dtGenerator, true);
   }
@@ -114,7 +124,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case of I/O errors.
    */
-  public static void executeDataSourceServletFlow(HttpServletRequest req, HttpServletResponse resp,
+  public void executeDataSourceServletFlow(HttpServletRequest req, HttpServletResponse resp,
       DataTableGenerator dtGenerator, boolean isRestrictedAccessMode) throws IOException {
     // Extract the data source request parameters.
     DataSourceRequest dsRequest = null;
@@ -123,18 +133,18 @@ public class DataSourceHelper {
 
       if (isRestrictedAccessMode) {
         // Verify that the request is approved for access.
-        DataSourceHelper.verifyAccessApproved(dsRequest);
+        verifyAccessApproved(dsRequest);
       }
 
       // Split the query.
-      QueryPair query = DataSourceHelper.splitQuery(dsRequest.getQuery(),
+      QueryPair query = splitQuery(dsRequest.getQuery(),
           dtGenerator.getCapabilities());
 
       // Generate the data table.
       DataTable dataTable = dtGenerator.generateDataTable(query.getDataSourceQuery(), req);
 
       // Apply the completion query to the data table.
-      DataTable newDataTable = DataSourceHelper.applyQuery(query.getCompletionQuery(), dataTable,
+      DataTable newDataTable = applyQuery(query.getCompletionQuery(), dataTable,
           dsRequest.getUserLocale());
 
       // Set the response.
@@ -143,7 +153,7 @@ public class DataSourceHelper {
       if (dsRequest != null) {
         setServletErrorResponse(e, dsRequest, resp);
       } else {
-        DataSourceHelper.setServletErrorResponse(e, req, resp);
+        setServletErrorResponse(e, req, resp);
       }
     } catch (RuntimeException e) {
       log.error("A runtime exception has occured", e);
@@ -152,7 +162,7 @@ public class DataSourceHelper {
       if (dsRequest == null) {
         dsRequest = DataSourceRequest.getDefaultDataSourceRequest(req);
       }
-      DataSourceHelper.setServletErrorResponse(status, dsRequest, resp);
+      setServletErrorResponse(status, dsRequest, resp);
     }
   }
 
@@ -163,7 +173,7 @@ public class DataSourceHelper {
    *
    * @throws DataSourceException If the access for this request is denied.
    */
-  public static void verifyAccessApproved(DataSourceRequest req) throws DataSourceException {
+  public void verifyAccessApproved(DataSourceRequest req) throws DataSourceException {
     // The library requires the request to be same origin for JSON and JSONP.
     // Check for (!csv && !html && !tsv-excel) to make sure any output type
     // added in the future will be restricted to the same domain by default.
@@ -187,7 +197,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case an error happened trying to write the response to the servlet.
    */
-  public static void setServletResponse(DataTable dataTable, DataSourceRequest dataSourceRequest,
+  public void setServletResponse(DataTable dataTable, DataSourceRequest dataSourceRequest,
       HttpServletResponse res) throws IOException {
     String responseMessage = generateResponse(dataTable, dataSourceRequest);
     setServletResponse(responseMessage, dataSourceRequest, res);
@@ -202,10 +212,10 @@ public class DataSourceHelper {
    *
    * @throws IOException In case an error happened trying to write to the servlet response.
    */
-  public static void setServletResponse(String responseMessage,
+  public void setServletResponse(String responseMessage,
       DataSourceRequest dataSourceRequest, HttpServletResponse res) throws IOException {
     DataSourceParameters dataSourceParameters = dataSourceRequest.getDataSourceParameters();
-    ResponseWriter.setServletResponse(responseMessage, dataSourceParameters, res);
+    responseWriter.setServletResponse(responseMessage, dataSourceParameters, res);
   }
 
 
@@ -218,7 +228,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case an error happened trying to write the response to the servlet.
    */
-  public static void setServletErrorResponse(DataSourceException dataSourceException,
+  public void setServletErrorResponse(DataSourceException dataSourceException,
       DataSourceRequest dataSourceRequest, HttpServletResponse res) throws IOException {
     String responseMessage = generateErrorResponse(dataSourceException, dataSourceRequest);
     setServletResponse(responseMessage, dataSourceRequest, res);
@@ -233,7 +243,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case an error happened trying to write the response to the servlet.
    */
-  public static void setServletErrorResponse(ResponseStatus responseStatus,
+  public void setServletErrorResponse(ResponseStatus responseStatus,
       DataSourceRequest dataSourceRequest, HttpServletResponse res) throws IOException {
     String responseMessage = generateErrorResponse(responseStatus, dataSourceRequest);
     setServletResponse(responseMessage, dataSourceRequest, res);
@@ -252,7 +262,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case an error happened trying to write the response to the servlet.
    */
-  public static void setServletErrorResponse(DataSourceException dataSourceException,
+  public void setServletErrorResponse(DataSourceException dataSourceException,
       HttpServletRequest req, HttpServletResponse res) throws IOException {
     DataSourceRequest dataSourceRequest = DataSourceRequest.getDefaultDataSourceRequest(req);
     setServletErrorResponse(dataSourceException, dataSourceRequest, res);
@@ -268,7 +278,7 @@ public class DataSourceHelper {
    *
    * @return The response string.
    */
-  public static String generateResponse(DataTable dataTable, DataSourceRequest dataSourceRequest) {
+  public String generateResponse(DataTable dataTable, DataSourceRequest dataSourceRequest) {
     CharSequence response;
     ResponseStatus responseStatus = null;
     if (!dataTable.getWarnings().isEmpty()) {
@@ -318,7 +328,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case if I/O errors.
    */
-  public static String generateErrorResponse(DataSourceException dse, DataSourceRequest dsRequest)
+  public String generateErrorResponse(DataSourceException dse, DataSourceRequest dsRequest)
       throws IOException {
     ResponseStatus responseStatus = ResponseStatus.createResponseStatus(dse);
     responseStatus = ResponseStatus.getModifiedResponseStatus(responseStatus);
@@ -337,7 +347,7 @@ public class DataSourceHelper {
    *
    * @throws IOException In case if I/O errors.
    */
-  public static String generateErrorResponse(ResponseStatus responseStatus,
+  public String generateErrorResponse(ResponseStatus responseStatus,
       DataSourceRequest dsRequest) throws IOException {
     DataSourceParameters dsParameters = dsRequest.getDataSourceParameters();
     CharSequence response;
@@ -365,7 +375,7 @@ public class DataSourceHelper {
   // -------------------------- Query helper methods ----------------------------------------------
 
   /** @see #parseQuery(String, ULocale)*/
-  public static Query parseQuery(String queryString) throws InvalidQueryException {
+  public Query parseQuery(String queryString) throws InvalidQueryException {
     return parseQuery(queryString, null);
   }
   
@@ -374,13 +384,12 @@ public class DataSourceHelper {
    * Throws an exception if the query is invalid.
    *
    * @param queryString The query string.
-   * @param locale The user locale.
    *
    * @return The parsed query object.
    *
    * @throws InvalidQueryException If the query is invalid.
    */
-  public static Query parseQuery(String queryString, ULocale userLocale) 
+  public Query parseQuery(String queryString, ULocale userLocale) 
       throws InvalidQueryException {
     QueryBuilder queryBuilder = QueryBuilder.getInstance();
     Query query = queryBuilder.parseQuery(queryString, userLocale);
@@ -403,7 +412,7 @@ public class DataSourceHelper {
    * @throws InvalidQueryException If the query is invalid.
    * @throws DataSourceException If the data source cannot execute the query.
    */
-  public static DataTable applyQuery(Query query, DataTable dataTable, ULocale locale)
+  public DataTable applyQuery(Query query, DataTable dataTable, ULocale locale)
       throws InvalidQueryException, DataSourceException {
     dataTable.setLocaleForUserMessages(locale);
     validateQueryAgainstColumnStructure(query, dataTable);
@@ -426,7 +435,7 @@ public class DataSourceHelper {
    *
    * @throws DataSourceException If the query cannot be split.
    */
-  public static QueryPair splitQuery(Query query, Capabilities capabilities)
+  public QueryPair splitQuery(Query query, Capabilities capabilities)
       throws DataSourceException {
     return QuerySplitter.splitQuery(query, capabilities);
   }
@@ -450,7 +459,7 @@ public class DataSourceHelper {
    * @throws InvalidQueryException Thrown if the query is found to be invalid
    *     against the given data table.
    */
-  public static void validateQueryAgainstColumnStructure(Query query, DataTable dataTable)
+  public void validateQueryAgainstColumnStructure(Query query, DataTable dataTable)
       throws InvalidQueryException {
     // Check that all the simple columns exist in the table (including the
     // simple columns inside aggregation and scalar-function columns)
@@ -492,7 +501,7 @@ public class DataSourceHelper {
    *
    * @return The locale for the given request.
    */
-  public static ULocale getLocaleFromRequest(HttpServletRequest req) {
+  public ULocale getLocaleFromRequest(HttpServletRequest req) {
     Locale locale;
     String requestLocale = req.getParameter(LOCALE_REQUEST_PARAMETER);
     if (requestLocale != null) {

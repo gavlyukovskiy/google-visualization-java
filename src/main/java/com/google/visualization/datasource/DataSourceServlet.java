@@ -23,13 +23,18 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * An abstract class for data source servlet implementations.
  *
+ * Used default implementation of {@link DataSourceHelper}.
+ * You are abble to change it using {@link DataSourceServlet#setDataSourceHelper(DataSourceHelper)}
+ *
  * @author Yaniv S.
  */
 public abstract class DataSourceServlet extends HttpServlet implements DataTableGenerator {
 
+  protected DataSourceHelper dataSourceHelper = DataSourceHelper.getInstance();
+
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    DataSourceHelper.executeDataSourceServletFlow(req, resp, this, isRestrictedAccessMode());
+    dataSourceHelper.executeDataSourceServletFlow(req, resp, this, isRestrictedAccessMode());
   }
 
   /**
@@ -53,5 +58,9 @@ public abstract class DataSourceServlet extends HttpServlet implements DataTable
   @Override
   public Capabilities getCapabilities() {
     return Capabilities.NONE;
+  }
+
+  public void setDataSourceHelper(DataSourceHelper dataSourceHelper) {
+    this.dataSourceHelper = dataSourceHelper;
   }
 }

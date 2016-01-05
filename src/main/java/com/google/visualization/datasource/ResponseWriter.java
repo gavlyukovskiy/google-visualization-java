@@ -14,13 +14,13 @@
 
 package com.google.visualization.datasource;
 
-import com.google.visualization.datasource.base.DataSourceParameters;
-import com.google.visualization.datasource.base.OutputType;
-
 import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.visualization.datasource.base.DataSourceParameters;
+import com.google.visualization.datasource.base.OutputType;
 
 /**
  * A helper class responsible for writing a response message on a <code>HttpServletResponse</code>.
@@ -33,12 +33,15 @@ public class ResponseWriter {
    * UTF-16LE byte-order mark required by TSV_EXCEL output type.
    * @see OutputType#TSV_EXCEL
    */
-  private static final byte[] UTF_16LE_BOM = new byte[] {(byte) 0xff, (byte) 0xfe};
-  
-  /**
-   * A private constructor.
-   */
-  private ResponseWriter() {}
+  protected static final byte[] UTF_16LE_BOM = new byte[] {(byte) 0xff, (byte) 0xfe};
+
+  private static final ResponseWriter SINGLETON = new ResponseWriter();
+
+  public static ResponseWriter getInstance() {
+    return SINGLETON;
+  }
+
+  protected ResponseWriter() {}
 
   /**
    * Sets the specified responseMessage on the given <code>HttpServletResponse</code>.
@@ -50,7 +53,7 @@ public class ResponseWriter {
    *
    * @throws IOException In case of a I/O error.
    */
-  public static void setServletResponse(String responseMessage,
+  public void setServletResponse(String responseMessage,
       DataSourceParameters dataSourceParameters, HttpServletResponse res) throws IOException {
     OutputType type = dataSourceParameters.getOutputType();
     switch (type) {
@@ -85,13 +88,10 @@ public class ResponseWriter {
    * the <code>OutputType</code> is CSV.
    * This method assumes the <code>StatusType</code> is 'OK'.
    *
-   * @param responseMessage The response message.
    * @param dataSourceParameters The data source parameters.
    * @param res The HTTP response.
-   *
-   * @throws IOException In case of a I/O error.
    */
-  static void setServletResponseCSV(DataSourceParameters dataSourceParameters,
+  protected void setServletResponseCSV(DataSourceParameters dataSourceParameters,
       HttpServletResponse res) {
     res.setContentType("text/csv; charset=UTF-8");
     String outFileName = dataSourceParameters.getOutFileName();
@@ -108,13 +108,10 @@ public class ResponseWriter {
    * Sets the HTTP servlet response for a TSV_EXCEL output type.
    * This method assumes the <code>StatusType</code> is 'OK'.
    *
-   * @param responseMessage The response message.
    * @param dsParams The data source parameters.
    * @param res The HTTP response.
-   *
-   * @throws IOException In case of a I/O error.
    */
-  static void setServletResponseTSVExcel(DataSourceParameters dsParams,
+  protected void setServletResponseTSVExcel(DataSourceParameters dsParams,
       HttpServletResponse res) {
     res.setContentType("text/csv; charset=UTF-16LE");
     String outFileName = dsParams.getOutFileName();
@@ -125,12 +122,9 @@ public class ResponseWriter {
    * Sets the HTTP servlet response for a HTML output type.
    * This method assumes the <code>StatusType</code> is 'OK'.
    *
-   * @param responseMessage The response message.
    * @param res The HTTP response.
-   *
-   * @throws IOException In case of a I/O error.
    */
-  static void setServletResponseHTML(HttpServletResponse res) {
+  protected void setServletResponseHTML(HttpServletResponse res) {
     res.setContentType("text/html; charset=UTF-8");
   }
   
@@ -138,12 +132,9 @@ public class ResponseWriter {
    * Sets the HTTP servlet response for a JSONP output type.
    * This method assumes the <code>StatusType</code> is 'OK'.
    *
-   * @param responseMessage The response char sequence.
    * @param res The HTTP response.
-   *
-   * @throws IOException In case of a I/O error.
    */
-  static void setServletResponseJSONP(HttpServletResponse res) {
+  protected void setServletResponseJSONP(HttpServletResponse res) {
     res.setContentType("text/javascript; charset=UTF-8");
   }
   
@@ -151,12 +142,9 @@ public class ResponseWriter {
    * Sets the HTTP servlet response for a JSON output type.
    * This method assumes the <code>StatusType</code> is 'OK'.
    *
-   * @param responseMessage The response char sequence.
    * @param res The HTTP response.
-   *
-   * @throws IOException In case of a I/O error.
    */
-  static void setServletResponseJSON(HttpServletResponse res) {
+  protected void setServletResponseJSON(HttpServletResponse res) {
     res.setContentType("application/json; charset=UTF-8");
   }
 
@@ -169,7 +157,7 @@ public class ResponseWriter {
    *
    * @throws IOException In case of a I/O error.
    */
-  private static void writeServletResponse(CharSequence responseMessage, HttpServletResponse res) 
+  protected void writeServletResponse(CharSequence responseMessage, HttpServletResponse res)
       throws IOException {
     writeServletResponse(responseMessage, res, "UTF-8", null);
   }
@@ -187,7 +175,7 @@ public class ResponseWriter {
    *
    * @throws IOException In case of a I/O error.
    */
-  private static void writeServletResponse(CharSequence charSequence, HttpServletResponse res,
+  protected void writeServletResponse(CharSequence charSequence, HttpServletResponse res,
       String charset, byte[] byteOrderMark) throws IOException {
     ServletOutputStream outputStream = res.getOutputStream();
     if (byteOrderMark != null) {
