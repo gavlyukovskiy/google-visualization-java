@@ -223,8 +223,7 @@ public class DataSourceParameters {
    * @return The response handler.
    */
   public String getResponseHandler() {
-    // Remove characters that can be a threat when injecting scripts.
-    return responseHandler.replaceAll("[^a-zA-Z0-9_\\.]", "");
+    return responseHandler;
   }
 
   /**
